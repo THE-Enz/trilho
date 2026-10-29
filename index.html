@@ -2145,7 +2145,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
     // De browser roept de wissel pas aan na een tekenbeurt; blijft die uit (achtergrondvenster), dan toch gewoon tonen.
     var klaar = false, doeEens = function () { if (!klaar) { klaar = true; doe(); } };
     var vt = document.startViewTransition(doeEens);
-    vt.finished.catch(function () { });
+    ['ready', 'finished', 'updateCallbackDone'].forEach(function (k) { if (vt[k]) vt[k].catch(function () { }); });
     setTimeout(function () { if (!klaar) { try { vt.skipTransition(); } catch (x) { } doeEens(); } }, 400);
   }
   function toon(behoud) { wisselPagina(function () { toonNu(behoud); }); }
