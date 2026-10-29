@@ -929,6 +929,36 @@ html { scroll-behavior: smooth; }
   .knop:hover, .fotokaart:hover { transform: none; }
 }
 
+/* ===== Diashow bovenaan de voorpagina ===== */
+.diashow .dia { opacity: 0; transition: opacity 1.4s ease; animation: none; }
+.diashow .dia.aan { opacity: 1; animation: kenburns-dia 7s ease-out both; }
+.diashow .dia:nth-child(even).aan { animation-name: kenburns-dia-2; }
+@keyframes kenburns-dia { from { scale: 1.02; translate: 0 0; } to { scale: 1.1; translate: -1.5% 0; } }
+@keyframes kenburns-dia-2 { from { scale: 1.1; translate: 1.5% 0; } to { scale: 1.02; translate: 0 0; } }
+.dia-stippen { position: absolute; right: 18px; bottom: 50px; z-index: 3; display: flex; gap: 6px; }
+.dia-stippen button { width: 28px; height: 22px; border: 0; background: none; padding: 0; cursor: pointer; display: grid; place-items: center; }
+.dia-stippen i { display: block; width: 22px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.45); transition: background .3s, width .3s; }
+.dia-stippen button[aria-selected="true"] i { background: #fff; }
+.dia-stippen button:hover i { background: rgba(255,255,255,.8); }
+.dia-stippen button:focus-visible { outline: 2px solid var(--oker); outline-offset: 2px; border-radius: 4px; }
+.dia-tekst { transition: opacity .4s; }
+@media (max-width: 600px) { .dia-stippen { right: 12px; bottom: 44px; } .dia-stippen i { width: 16px; } .dia-stippen button { width: 20px; } }
+/* ===== Loopband: foto's schuiven langzaam voorbij ===== */
+.loopband { overflow: hidden; padding: 0 0 56px; mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.loop { display: flex; gap: 14px; width: max-content; animation: loopband calc(var(--n) * 4.5s) linear infinite; }
+.loopband:hover .loop, .loopband:focus-within .loop { animation-play-state: paused; }
+@keyframes loopband { to { transform: translateX(calc(-50% - 7px)); } }
+.loop-foto { position: relative; flex: none; width: 260px; aspect-ratio: 4 / 3; border: 0; padding: 0; border-radius: 16px; overflow: hidden; cursor: zoom-in; background: var(--zand); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.loop-foto:nth-child(odd) { width: 300px; margin-top: 18px; }
+.loop-foto img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1s cubic-bezier(.2,.8,.2,1); }
+.loop-foto span { position: absolute; left: 12px; right: 12px; bottom: 10px; color: #fff; font: 600 .82rem var(--sans); text-align: left; text-shadow: 0 1px 6px rgba(0,0,0,.6); opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; }
+.loop-foto:hover { transform: translateY(-4px); }
+.loop-foto:hover img { transform: scale(1.06); }
+.loop-foto:hover span, .loop-foto:focus-visible span { opacity: 1; transform: none; }
+.loop-foto:focus-visible { outline: 3px solid var(--terra); outline-offset: 2px; }
+@media (max-width: 600px) { .loop-foto { width: 190px; } .loop-foto:nth-child(odd) { width: 220px; margin-top: 12px; } .loopband { padding-bottom: 40px; } }
+@media (prefers-reduced-motion: reduce) { .diashow .dia.aan { animation: none; } .loop { animation: none; overflow-x: auto; width: auto; } .loopband { mask-image: none; -webkit-mask-image: none; } }
+
 </style>
 <div class="demobalk" data-t="Voorproefje · prijzen en verblijven zijn voorbeelden">Voorproefje · prijzen en verblijven zijn voorbeelden</div>
 <a class="sla-over" href="#inhoud" data-t="Naar de inhoud">Naar de inhoud</a>
@@ -1591,25 +1621,73 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
   }
 
   // ---------- pagina's ----------
+  var DIA_KEUZE = ['kliffen.jpg', 'praia-do-malhao-in-bloei.jpg', 'cabo-sardao.jpg', 'praia-da-arrifana.jpg', 'bordeira-vlonder.jpg', 'ponta-da-piedade.jpg', 'uitzicht-langs-de-kust.jpg', 'odeceixe.jpg'];
+  function fotoOpNaam(naam) { return D.fotos.find(function (f) { return f.bestand === naam; }); }
+  function diaFotos() {
+    var lijst = DIA_KEUZE.map(fotoOpNaam).filter(Boolean);
+    return lijst.length >= 3 ? lijst : [D.hero].concat(D.fotos.filter(function (f) { return f.etappe && f !== D.hero; }).slice(0, 5));
+  }
+  function bandFotos() {
+    var dia = diaFotos();
+    return D.fotos.filter(function (f) { return f.etappe && dia.indexOf(f) === -1 && !f.sfeer; }).slice(0, 14);
+  }
   function start() {
-    var hero = D.hero, drie = D.drie;
+    var hero = D.hero, drie = D.drie, dias = diaFotos(), band = bandFotos();
     function beeld(i, titel, tekst) {
       var f = drie[i];
       return '<figure>' + (f ? '<img src="' + img(f, true) + '" alt="' + e(t(f.bijschrift)) + '" loading="lazy">' : '') + '<h3>' + e(titel) + '</h3><p>' + e(tekst) + '</p></figure>';
     }
-    return '<section class="fotohero fotohero-enkel"><img class="held-beeld" src="' + img(hero) + '" alt="" fetchpriority="high"><div class="fotohero-binnen"><div>' +
+    return '<section class="fotohero fotohero-enkel diashow" id="diashow">' + dias.map(function (f, i) {
+        return '<img class="held-beeld dia' + (i === 0 ? ' aan' : '') + '" src="' + img(f) + '" alt="" ' + (i === 0 ? 'fetchpriority="high"' : 'loading="lazy"') + ' data-i="' + i + '">';
+      }).join('') + '<div class="fotohero-binnen"><div>' +
       '<h1>' + e(t("Loop de Fishermen's Trail.")) + '</h1><p class="ondertitel">' + e(t('Wij boeken elke nacht een bed. Jij loopt.')) + '</p>' +
       '<a class="knop knop-groot" href="#plannen">' + e(t('Plan je tocht')) + '</a>' +
       '<div class="feitjes"><span><b>' + D.etappes.length + '</b>' + e(t('etappes')) + '</span><span><b>' + Math.round(D.totaal_km) + '</b>' + e(t('km langs de kust')) + '</span></div></div></div>' +
-      (hero.maker ? '<a class="fotovermelding" href="#fotos">' + e(t('Foto')) + ': ' + e(hero.maker) + '</a>' : '') + '</section>' +
+      '<div class="dia-stippen" role="tablist" aria-label="' + e(t("Foto's")) + '">' + dias.map(function (f, i) {
+        return '<button type="button" role="tab" aria-selected="' + (i === 0) + '" data-dia="' + i + '" aria-label="' + e(t(f.bijschrift)) + '"><i></i></button>';
+      }).join('') + '</div>' +
+      '<a class="fotovermelding dia-tekst" href="#fotos" id="diatekst">' + e(t(dias[0].bijschrift)) + (dias[0].maker ? ' · ' + e(t('Foto')) + ': ' + e(dias[0].maker) : '') + '</a></section>' +
       '<section class="sectie"><div class="container drie">' +
       beeld(0, t('De route'), tf('{n} etappes over de kliffen, van São Torpes naar Lagos.', { n: D.etappes.length })) +
       beeld(1, t('Elke nacht een bed'), t('Hostel, guesthouse of hotel. Jij kiest, wij boeken.')) +
       beeld(2, t('Je koffer gaat mee'), t('Jij loopt met een dagrugzak. Je koffer wacht in het volgende dorp.')) + '</div></section>' +
+      (band.length >= 6 ? '<section class="loopband" aria-label="' + e(t("Foto's")) + '"><div class="loop" style="--n:' + band.length + '">' + [0, 1].map(function (k) {
+        return band.map(function (f, i) { return '<button type="button" class="loop-foto" data-foto="' + e(f.bestand) + '"' + (k ? ' aria-hidden="true" tabindex="-1"' : '') + '><img src="' + img(f, true) + '" alt="' + e(t(f.bijschrift)) + '" loading="lazy"><span>' + e(t(f.bijschrift)) + '</span></button>'; }).join('');
+      }).join('') + '</div></section>' : '') +
       '<section class="sectie" style="padding-top:0"><div class="container"><div style="display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap"><h2 style="margin:0">' + e(t('De etappes')) + '</h2><a href="#route">' + e(t('Bekijk de route')) + ' →</a></div>' +
       '<div class="fotokaarten">' + D.etappes.map(fotokaart).join('') + '</div></div></section>';
   }
 
+  function naStart() {
+    var show = document.getElementById('diashow'); if (!show) return;
+    var dias = diaFotos(), beelden = show.querySelectorAll('.dia'), stippen = show.querySelectorAll('[data-dia]'), tekst = document.getElementById('diatekst');
+    var i = 0, timer = null, stil = false;
+    function ga(naar, hand) {
+      i = (naar + beelden.length) % beelden.length;
+      beelden.forEach(function (b, k) { b.classList.toggle('aan', k === i); if (k === i) { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; } });
+      stippen.forEach(function (st, k) { st.setAttribute('aria-selected', String(k === i)); });
+      var f = dias[i]; tekst.textContent = t(f.bijschrift) + (f.maker ? ' · ' + t('Foto') + ': ' + f.maker : '');
+      if (hand) herstart();
+    }
+    function herstart() { clearInterval(timer); if (!RUSTIG) timer = setInterval(function () { if (!stil && !document.hidden) ga(i + 1); }, 6000); }
+    stippen.forEach(function (st) { st.addEventListener('click', function () { ga(+st.dataset.dia, true); }); });
+    show.addEventListener('mouseenter', function () { stil = true; }); show.addEventListener('mouseleave', function () { stil = false; });
+    var x0 = null;
+    show.addEventListener('pointerdown', function (ev) { if (ev.pointerType === 'touch') x0 = ev.clientX; });
+    show.addEventListener('pointerup', function (ev) { if (x0 !== null && Math.abs(ev.clientX - x0) > 40) ga(ev.clientX < x0 ? i + 1 : i - 1, true); x0 = null; });
+    document.addEventListener('keydown', function toets(ev) {
+      if (!document.getElementById('diashow')) { document.removeEventListener('keydown', toets); return; }
+      if (ev.key === 'ArrowRight' && document.activeElement.closest && document.activeElement.closest('.dia-stippen')) ga(i + 1, true);
+      if (ev.key === 'ArrowLeft' && document.activeElement.closest && document.activeElement.closest('.dia-stippen')) ga(i - 1, true);
+    });
+    herstart();
+    // De loopband: klik op een foto opent hem groot.
+    var band = inhoud.querySelector('.loopband');
+    if (band) band.addEventListener('click', function (ev) {
+      var k = ev.target.closest('[data-foto]'); if (!k) return;
+      var lijst = bandFotos(); openLichtbak(fotoOpNaam(k.dataset.foto), lijst);
+    });
+  }
   function route() {
     var kop = '<section class="paginakop paginakop-klein"><div class="container"><h1>' + e(t('De route')) + '</h1><p class="intro">' + e(tf('{n} etappes, {k} km. Van São Torpes naar Lagos, over de oude paden van de vissers.', { n: D.etappes.length, k: Math.round(D.totaal_km) })) + '</p></div></section>';
     var kaarten = '<div class="fotokaarten fotokaarten-raster" style="margin-top:0">' + D.etappes.map(fotokaart).join('') + '</div>';
@@ -2162,7 +2240,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
     else if (h === 'paklijst') { html = paklijst(); na = naPaklijst; }
     else if (h === 'fotos') html = fotos();
     else if (h === 'vragen') html = vragen();
-    else html = start();
+    else { html = start(); na = naStart; }
     inhoud.innerHTML = html;
     if (na) na();
     window.scrollTo({ top: behoud === true ? y : 0, behavior: 'instant' });
@@ -2178,8 +2256,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       var y = window.scrollY, hoog = document.documentElement.scrollHeight - window.innerHeight;
       kop.classList.toggle('klein', y > 40);
       balk.style.transform = 'scaleX(' + (hoog > 400 ? Math.min(1, y / hoog) : 0) + ')';
-      var held = inhoud.querySelector('.fotohero .held-beeld, .etappekop .held-beeld');
-      if (held && !RUSTIG && y < 1200) held.style.setProperty('--y', (y * 0.35) + 'px');
+      if (!RUSTIG && y < 1200) inhoud.querySelectorAll('.fotohero .held-beeld, .etappekop .held-beeld').forEach(function (held) { held.style.setProperty('--y', (y * 0.35) + 'px'); });
     }
     window.addEventListener('scroll', function () { if (!bezig) { bezig = true; requestAnimationFrame(stap); } }, { passive: true });
     stap();
