@@ -852,6 +852,83 @@ h2 { font-size: clamp(1.5rem, 2.6vw, 2rem); }
 .sla-over { position: absolute; left: 16px; top: -60px; z-index: 100; background: var(--oceaan); color: #fff; padding: 10px 14px; border-radius: 8px; font-weight: 600; transition: top .15s; }
 .sla-over:focus { top: 16px; outline: 3px solid var(--oker); }
 
+/* ===== Beweging ===== */
+html { scroll-behavior: smooth; }
+/* Paginawissel: de oude pagina zakt zacht weg, de nieuwe komt omhoog; het heldbeeld morft van kaart naar kop. */
+::view-transition-old(root) { animation: wissel-weg .28s cubic-bezier(.4, 0, 1, 1) both; }
+::view-transition-new(root) { animation: wissel-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes wissel-weg { to { opacity: 0; transform: translateY(-10px); } }
+@keyframes wissel-in { from { opacity: 0; transform: translateY(18px); } }
+::view-transition-group(*) { animation-duration: .55s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+::view-transition-old(*):not(::view-transition-old(root)), ::view-transition-new(*):not(::view-transition-new(root)) { animation: none; mix-blend-mode: normal; height: 100%; object-fit: cover; }
+.kop { view-transition-name: kop; }
+.leesbalk { position: fixed; left: 0; top: 0; z-index: 70; height: 3px; width: 100%; background: linear-gradient(90deg, var(--oker), var(--terra)); transform-origin: left; transform: scaleX(0); pointer-events: none; }
+.kop { transition: box-shadow .3s, padding .3s; }
+.kop.klein { box-shadow: 0 6px 24px -14px rgba(0,0,0,.35); }
+.kop.klein .kop-binnen { padding-block: 8px; }
+.kop-binnen { transition: padding .3s; }
+/* Heldbeelden: trage zoom (Ken Burns) en parallax bij scrollen */
+.fotohero, .etappekop { overflow: hidden; background-image: none !important; }
+.held-beeld { position: absolute; inset: -12% 0 -12% 0; width: 100%; height: 124%; object-fit: cover; z-index: 0; transform: translateY(var(--y, 0)) scale(1.02); animation: kenburns-held 14s ease-out both; will-change: transform; }
+@keyframes kenburns-held { from { scale: 1.08; } to { scale: 1.02; } }
+.fotohero::before, .etappekop::before { z-index: 1; }
+.fotohero-binnen, .etappekop > .container, .fotovermelding { z-index: 2; }
+.fotohero h1, .fotohero .ondertitel, .fotohero .knop, .fotohero .feitjes { animation: omhoog .9s cubic-bezier(.2, .8, .2, 1) both; }
+.fotohero .ondertitel { animation-delay: .12s; } .fotohero .knop { animation-delay: .22s; } .fotohero .feitjes { animation-delay: .32s; }
+.etappekop h1, .etappekop .boventitel, .etappekop .etappe-feiten { animation: omhoog .8s cubic-bezier(.2, .8, .2, 1) both; }
+.etappekop .etappe-feiten { animation-delay: .15s; }
+@keyframes omhoog { from { opacity: 0; transform: translateY(22px); } }
+/* Onthullen bij scrollen */
+[data-onthul] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2, .8, .2, 1), transform .7s cubic-bezier(.2, .8, .2, 1); transition-delay: calc(var(--i, 0) * 70ms); }
+[data-onthul].zichtbaar { opacity: 1; transform: none; }
+[data-onthul].zichtbaar:hover { transition-delay: 0s; }
+/* Knoppen en kaarten: zweven, drukken, rimpelen */
+.knop { position: relative; overflow: hidden; transition: transform .2s cubic-bezier(.2, .8, .2, 1), box-shadow .2s, background .2s; }
+.knop:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -12px rgba(13, 74, 87, .6); }
+.knop:active { transform: translateY(0) scale(.97); transition-duration: .08s; }
+.rimpel { position: absolute; border-radius: 50%; background: currentColor; opacity: .18; transform: scale(0); animation: rimpel .6s ease-out forwards; pointer-events: none; }
+@keyframes rimpel { to { transform: scale(1); opacity: 0; } }
+.kl-item, .segment button, .lb-knop { position: relative; overflow: hidden; }
+.fotokaart { transition: transform .35s cubic-bezier(.2, .8, .2, 1), box-shadow .35s; }
+.fotokaart:hover { transform: translateY(-6px); box-shadow: 0 24px 40px -20px rgba(5, 30, 36, .55); }
+.fotokaart img { transition: transform 1.2s cubic-bezier(.2, .8, .2, 1); }
+.fotokaart:hover img { transform: scale(1.08); }
+.drie figure img { transition: transform 1s cubic-bezier(.2, .8, .2, 1); }
+.drie figure:hover img { transform: scale(1.04); }
+.nachtkaart, .pak-groep, .vraag, .dagkaart, .blok { transition: transform .3s cubic-bezier(.2, .8, .2, 1), box-shadow .3s, opacity .7s, border-color .2s; }
+.nachtkaart:hover, .vraag:hover { box-shadow: 0 18px 36px -22px rgba(5, 30, 36, .4); }
+.optie.gekozen { animation: kies .45s cubic-bezier(.2, .8, .2, 1); }
+@keyframes kies { 0% { transform: scale(1); } 40% { transform: scale(1.015); } 100% { transform: scale(1); } }
+.optie.gekozen::after { animation: popje .4s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes popje { from { transform: scale(0); } }
+#totaalprijs.tik { color: var(--terra); transition: color .2s; }
+.prijzen .totaal td { transition: color .4s; }
+/* Stempel: inktslag met kring */
+.stempel.nieuw::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--oker); animation: kring .7s ease-out both; pointer-events: none; }
+@keyframes kring { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+.stempel { transition: transform .3s cubic-bezier(.2, .8, .2, 1), background .3s, border-color .3s; }
+.stempel:hover { transform: scale(1.05); }
+.stempel.gezet:hover { transform: rotate(-8deg) scale(1.05); }
+/* Paklijst: vinkje springt */
+.pak-item input:checked + .pak-vink { animation: popje .35s cubic-bezier(.2, 1.6, .4, 1); }
+.pak-item.af .naam { background: linear-gradient(var(--grijs), var(--grijs)) no-repeat 0 55% / 100% 1.5px; text-decoration: none; animation: streep .35s ease-out; }
+@keyframes streep { from { background-size: 0 1.5px; } }
+/* Kaart komt zacht in beeld */
+.livekaart { opacity: 0; transition: opacity .8s ease; }
+.livekaart.klaar { opacity: 1; }
+.taalmenu button { transition: background .15s, transform .15s; }
+.taalmenu button:hover { transform: translateX(2px); }
+.vraag summary::after { transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+.vraag[open] > div { animation: omhoog .35s cubic-bezier(.2, .8, .2, 1) both; }
+.lichtbak img { animation: lb-zoom .45s cubic-bezier(.2, .8, .2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  [data-onthul] { opacity: 1; transform: none; transition: none; }
+  .held-beeld, .fotohero h1, .fotohero .ondertitel, .fotohero .knop, .fotohero .feitjes, .etappekop h1, .etappekop .boventitel, .etappekop .etappe-feiten, .optie.gekozen, .optie.gekozen::after, .stempel.nieuw::after, .pak-item input:checked + .pak-vink, .pak-item.af .naam { animation: none; }
+  ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(*) { animation: none; }
+  .knop:hover, .fotokaart:hover { transform: none; }
+}
+
 </style>
 <div class="demobalk" data-t="Voorproefje · prijzen en verblijven zijn voorbeelden">Voorproefje · prijzen en verblijven zijn voorbeelden</div>
 <a class="sla-over" href="#inhoud" data-t="Naar de inhoud">Naar de inhoud</a>
@@ -1028,6 +1105,11 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
   if (P.startdatum < iso(plus(new Date(), I.min_dagen_vooruit))) P.startdatum = eersteMaandag();
 
   // ---------- onderdelen ----------
+  document.addEventListener('click', function (ev) {
+    var k = ev.target.closest('.fotokaart[href^="#etappe-"]'); if (!k) return;
+    document.querySelectorAll('[style*="view-transition-name"]').forEach(function (x) { if (x !== k && x.classList.contains('fotokaart')) x.style.viewTransitionName = ''; });
+    k.style.viewTransitionName = 'held-' + k.getAttribute('href').replace('#etappe-', '');
+  });
   function fotokaart(et) {
     var f = et.fotos[0];
     return '<a class="fotokaart" href="#etappe-' + et.volgorde + '">' + (f ? '<img src="' + img(f, true) + '" alt="' + e(t(f.bijschrift)) + '" loading="lazy">' : '') +
@@ -1135,6 +1217,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
     return new Promise(function (ok) {
       // Niet op 'load' wachten (dat wacht op álle tegels); de route moet er meteen staan.
       map.once('style.load', function () {
+        map.getContainer().classList.add('klaar');
         stijlKleuren(map);
         // Reliëf onder het water leggen: de hoogtedata bevatten ook de zeebodem, en die willen we niet zien.
         var onderWater = map.getLayer('water') ? 'water' : (map.getStyle().layers.find(function (l) { return l.type === 'symbol'; }) || {}).id;
@@ -1514,7 +1597,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       var f = drie[i];
       return '<figure>' + (f ? '<img src="' + img(f, true) + '" alt="' + e(t(f.bijschrift)) + '" loading="lazy">' : '') + '<h3>' + e(titel) + '</h3><p>' + e(tekst) + '</p></figure>';
     }
-    return '<section class="fotohero fotohero-enkel" style="background-image:url(\'' + img(hero) + '\')"><div class="fotohero-binnen"><div>' +
+    return '<section class="fotohero fotohero-enkel"><img class="held-beeld" src="' + img(hero) + '" alt="" fetchpriority="high"><div class="fotohero-binnen"><div>' +
       '<h1>' + e(t("Loop de Fishermen's Trail.")) + '</h1><p class="ondertitel">' + e(t('Wij boeken elke nacht een bed. Jij loopt.')) + '</p>' +
       '<a class="knop knop-groot" href="#plannen">' + e(t('Plan je tocht')) + '</a>' +
       '<div class="feitjes"><span><b>' + D.etappes.length + '</b>' + e(t('etappes')) + '</span><span><b>' + Math.round(D.totaal_km) + '</b>' + e(t('km langs de kust')) + '</span></div></div></div>' +
@@ -1553,7 +1636,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
     var stranden = D.hotspots.filter(function (h) { return h.soort === 'strand' && (h.etappe === n || h.plaats === et.naar); });
     var eten = D.hotspots.filter(function (h) { return h.soort !== 'strand' && h.plaats === et.naar; });
     var vorige = etappe(n - 1), volgende = etappe(n + 1);
-    return '<section class="etappekop" style="background-image:url(\'' + img(f) + '\')"><div class="container"><p class="kruimel"><a href="#route">← ' + e(t('Alle etappes')) + '</a></p>' +
+    return '<section class="etappekop" style="view-transition-name:held-' + n + '"><img class="held-beeld" src="' + img(f) + '" alt=""><div class="container"><p class="kruimel"><a href="#route">← ' + e(t('Alle etappes')) + '</a></p>' +
       '<span class="boventitel" style="color:var(--oker)">' + e(t('Etappe')) + ' ' + n + '</span><h1>' + e(van.naam) + ' → ' + e(naar.naam) + '</h1><div class="etappe-feiten">' +
       '<div><b>' + km(et.km) + ' km</b><span>' + e(t('afstand')) + '</span></div><div><b>' + e(t(et.uren)) + '</b><span>' + e(t('looptijd')) + '</span></div>' +
       '<div><b>' + e(t(ZWAARTE[et.zwaarte])) + '</b><span>' + e(t('zwaarte')) + '</span></div>' + (hoogteVan(et) ? '<div><b>↗ ' + hoogteVan(et).stijging + ' m</b><span>' + e(t('stijging')) + '</span></div>' : '<div><b>' + stranden.length + '</b><span>' + e(t('stranden')) + '</span></div>') + '</div></div>' +
@@ -1660,7 +1743,10 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
           '<div class="nk-inhoud">' + (d.nacht ? '<div class="nk-opties">' + keuzes + '</div>' : '<p class="nk-geen">' + e(t('Geen overnachting: na de finish reis je naar huis.')) + '</p>') + '</div></article>';
       }).join('');
     tekenBoekvak(r);
+    onthul(vak, false);
+    vak.querySelectorAll('[data-onthul]').forEach(function (el, i) { if (i < 3) el.classList.add('zichtbaar'); });
   }
+  var vorigTotaal = null;
   function tekenBoekvak(r) {
     var laatste = r.dagen[r.dagen.length - 1], vertrek = laatste.nacht ? plus(laatste.datum, 1) : laatste.datum;
     document.getElementById('boekvak').innerHTML = '<div class="bv"><h3>' + e(t('Je boeking')) + '</h3>' +
@@ -1669,9 +1755,12 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       '<table class="prijzen"><tr><td>' + e(t('Overnachtingen')) + '</td><td>' + euro(r.pNachten) + '</td></tr>' +
       (P.bagage ? '<tr><td>' + e(t('Bagagevervoer')) + '</td><td>' + euro(r.bagage) + '</td></tr>' : '') +
       '<tr><td>' + e(t('Servicekosten')) + '</td><td>' + euro(r.service) + '</td></tr><tr><td class="groen">' + e(tf('Bijdrage aan {a}', { a: I.beheerder_naam })) + '</td><td class="groen">' + euro(r.bijdrage) + '</td></tr>' +
-      '<tr class="totaal"><td>' + e(t('Totaal')) + '</td><td>' + euro(r.totaal) + '</td></tr></table><p class="pp">' + e(tf('{b} per persoon', { b: euro(r.pp) })) + '</p>' +
+      '<tr class="totaal"><td>' + e(t('Totaal')) + '</td><td id="totaalprijs">' + euro(r.totaal) + '</td></tr></table><p class="pp">' + e(tf('{b} per persoon', { b: euro(r.pp) })) + '</p>' +
       '<button type="button" class="knop knop-groot knop-blok" data-reserveer>' + e(t('Reserveren')) + '</button>' +
       '<p class="klein" style="margin:10px 0 0;text-align:center">' + e(t('Nu nog niets betalen. Pas als alles bevestigd is.')) + '</p></div>';
+    var tp = document.getElementById('totaalprijs');
+    if (vorigTotaal !== null && vorigTotaal !== r.totaal) { tp.dataset.van = vorigTotaal; tel(tp, r.totaal, 700, euro); tp.classList.add('tik'); setTimeout(function () { tp.classList.remove('tik'); }, 700); }
+    vorigTotaal = r.totaal;
     document.getElementById('prijsbalk').innerHTML = '<div><b>' + euro(r.totaal) + '</b><span>' + e(tf('{n} nachten · {p} pers.', { n: r.nachten.length, p: P.personen })) + '</span></div>' +
       '<button type="button" class="knop" data-reserveer>' + e(t('Reserveren')) + '</button>';
   }
@@ -1702,6 +1791,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
     vak.innerHTML = html || '<span class="klein">' + e(t('Kies minstens 2 dagen voor een rustdag.')) + '</span>';
   }
   function naPlannen() {
+    vorigTotaal = null;
     var maxDagen = function () { return D.etappes.filter(function (x) { return x.volgorde >= P.start; }).length; };
     if (window.innerWidth < 900) document.getElementById('filters').open = false;
     function opnieuw(rust) { bewaar('plan', P); if (rust) tekenRustdagen(); tekenNachten(); }
@@ -2012,7 +2102,49 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
   }
 
   // ---------- router ----------
-  function toon(behoud) {
+  // ---------- beweging: paginawissel, onthullen bij scrollen, tellers ----------
+  var waarnemer = null;
+  function onthul(wortel, meteen) {
+    // Blokken komen zacht omhoog zodra ze in beeld scrollen; met een kleine vertraging per blok binnen dezelfde ouder.
+    var keus = '.sectie > .container > *, .fotokaart, .drie figure, .nachtkaart, .pak-groep, .vraag, .dagkaart, .hotspot, .klimaat, .profiel, aside .blok, .pak-tips > div, .galerij figure, .stempel, .kl-item';
+    var lijst = [].slice.call((wortel || inhoud).querySelectorAll(keus)).filter(function (el) { return !el.closest('[data-onthul]') || el.hasAttribute('data-onthul') === false; });
+    if (RUSTIG) return;
+    if (!waarnemer) waarnemer = new IntersectionObserver(function (items) {
+      items.forEach(function (it) { if (it.isIntersecting) { it.target.classList.add('zichtbaar'); waarnemer.unobserve(it.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    var perOuder = new Map();
+    lijst.forEach(function (el) {
+      if (el.hasAttribute('data-onthul')) return;
+      var n = perOuder.get(el.parentNode) || 0; perOuder.set(el.parentNode, n + 1);
+      el.setAttribute('data-onthul', ''); el.style.setProperty('--i', Math.min(n, 8));
+      if (meteen) el.classList.add('zichtbaar'); else waarnemer.observe(el);
+    });
+  }
+  function tel(el, naar, duur, formaat) {
+    // Een getal telt op naar zijn waarde (zoals op de sites van Stripe en Apple).
+    if (RUSTIG || document.hidden || !isFinite(naar)) { el.textContent = formaat(naar); el.dataset.van = naar; return; }
+    var van = parseFloat(String(el.dataset.van || 0)) || 0, begin = null;
+    el.dataset.van = naar;
+    requestAnimationFrame(function stap(nu) {
+      begin = begin || nu;
+      var f = Math.min(1, (nu - begin) / (duur || 900)), z = 1 - Math.pow(1 - f, 3);
+      el.textContent = formaat(van + (naar - van) * z);
+      if (f < 1) requestAnimationFrame(stap);
+    });
+  }
+  function tellers() {
+    inhoud.querySelectorAll('.feitjes b, .etappe-feiten b, .reis-feiten b, .getallen b').forEach(function (b) {
+      var m = /^([^\d]*)([\d.,]+)(.*)$/.exec(b.textContent.trim()); if (!m || b.dataset.van) return;
+      var getal = parseFloat(m[2].replace(/\./g, '').replace(',', '.')), dec = (m[2].split(',')[1] || '').length;
+      if (!isFinite(getal) || /\d/.test(m[1]) || m[3].indexOf(':') !== -1) return;
+      tel(b, getal, 1100, function (x) { return m[1] + x.toLocaleString(loc(), { minimumFractionDigits: dec, maximumFractionDigits: dec }) + m[3]; });
+    });
+  }
+  function wisselPagina(doe) {
+    if (!RUSTIG && !document.hidden && document.startViewTransition) { document.startViewTransition(doe); } else doe();
+  }
+  function toon(behoud) { wisselPagina(function () { toonNu(behoud); }); }
+  function toonNu(behoud) {
     var h = (location.hash || '').replace('#', '') || 'start', html, na, y = window.scrollY;
     sluitLichtbak();
     if (huidigeKaart) { try { huidigeKaart.remove(); } catch (x) { } huidigeKaart = null; }
@@ -2029,7 +2161,32 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
     inhoud.innerHTML = html;
     if (na) na();
     window.scrollTo({ top: behoud === true ? y : 0, behavior: 'instant' });
+    onthul(inhoud, behoud === true); tellers();
+    document.body.dataset.pagina = h.replace(/-\d+$/, '');
   }
+  // Balk bovenin wordt compacter bij scrollen; leesvoortgang op lange pagina's; parallax op het heldbeeld.
+  (function () {
+    var kop = document.querySelector('.kop'), balk = document.createElement('div'); balk.className = 'leesbalk'; document.body.appendChild(balk);
+    var bezig = false;
+    function stap() {
+      bezig = false;
+      var y = window.scrollY, hoog = document.documentElement.scrollHeight - window.innerHeight;
+      kop.classList.toggle('klein', y > 40);
+      balk.style.transform = 'scaleX(' + (hoog > 400 ? Math.min(1, y / hoog) : 0) + ')';
+      var held = inhoud.querySelector('.fotohero .held-beeld, .etappekop .held-beeld');
+      if (held && !RUSTIG && y < 1200) held.style.setProperty('--y', (y * 0.35) + 'px');
+    }
+    window.addEventListener('scroll', function () { if (!bezig) { bezig = true; requestAnimationFrame(stap); } }, { passive: true });
+    stap();
+  })();
+  // Rimpeling op knoppen (zoals in Material en op Stripe): een kringetje vanaf de klik.
+  document.addEventListener('pointerdown', function (ev) {
+    var k = ev.target.closest('.knop, .kl-item, .segment button, .lb-knop'); if (!k || RUSTIG) return;
+    var r = k.getBoundingClientRect(), rim = document.createElement('i'); rim.className = 'rimpel';
+    var maat = Math.max(r.width, r.height) * 2;
+    rim.style.cssText = 'width:' + maat + 'px;height:' + maat + 'px;left:' + (ev.clientX - r.left - maat / 2) + 'px;top:' + (ev.clientY - r.top - maat / 2) + 'px';
+    k.appendChild(rim); setTimeout(function () { rim.remove(); }, 650);
+  });
   document.addEventListener('click', function (ev) { var k = ev.target.closest('[data-print]'); if (k) printen(k.dataset.print); });
   vasteTeksten();
   window.addEventListener('hashchange', toon);
