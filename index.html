@@ -1684,7 +1684,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       var x = lijst[i];
       el.innerHTML = '<figure><div class="lb-beeld"><img src="' + img(x) + '" alt="' + e(t(x.bijschrift)) + '"></div><figcaption><div><b>' + e(t(x.bijschrift)) + '</b>' +
         (x.etappe ? ' <a href="#etappe-' + x.etappe + '">' + e(t('ETAPPE')) + ' ' + x.etappe + ' →</a>' : '') + '</div>' +
-        '<small>' + e(t('Foto')) + ': ' + e(x.maker || '') + (x.licentie ? ' · ' + e(x.licentie) : '') + '</small></figcaption></figure>' +
+        '</figcaption></figure>' +
         '<button type="button" class="lb-knop lb-dicht" aria-label="' + e(t('Sluiten')) + '">×</button>' +
         (lijst.length > 1 ? '<button type="button" class="lb-knop lb-vorige" aria-label="' + e(t('Vorige')) + '">‹</button>' +
         '<button type="button" class="lb-knop lb-volgende" aria-label="' + e(t('Volgende')) + '">›</button>' : '');
@@ -2071,7 +2071,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       '<div class="dia-stippen" role="tablist" aria-label="' + e(t("Foto's")) + '">' + dias.map(function (f, i) {
         return '<button type="button" role="tab" aria-selected="' + (i === 0) + '" data-dia="' + i + '" aria-label="' + e(t(f.bijschrift)) + '"><i></i></button>';
       }).join('') + '</div>' +
-      '<a class="fotovermelding dia-tekst" href="#fotos" id="diatekst">' + e(t(dias[0].bijschrift)) + (dias[0].maker ? ' · ' + e(t('Foto')) + ': ' + e(dias[0].maker) : '') + '</a></section>' +
+      '</section>' +
       '<section class="sectie bento-sectie"><div class="container"><span class="boventitel">' + e(t('Zo werkt het')) + '</span><div class="bento">' +
       tegel(0, '01', '#route', t('De route'), tf('{n} etappes over de kliffen, van São Torpes naar Lagos.', { n: D.etappes.length })) +
       tegel(1, '02', '#plannen', t('Elke nacht een bed'), t('Hostel, guesthouse of hotel. Jij kiest, wij boeken.')) +
@@ -2102,7 +2102,6 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       i = (naar + beelden.length) % beelden.length; laad(i); laad(i + 1);
       beelden.forEach(function (b, k) { b.classList.toggle('aan', k === i); if (k === i) { b.style.animation = 'none'; void b.offsetWidth; b.style.animation = ''; } });
       stippen.forEach(function (st, k) { st.setAttribute('aria-selected', String(k === i)); });
-      var f = dias[i]; tekst.textContent = t(f.bijschrift) + (f.maker ? ' · ' + t('Foto') + ': ' + f.maker : '');
       if (hand) herstart();
     }
     function herstart() {
@@ -2161,7 +2160,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
       '<span class="boventitel" style="color:var(--oker)">' + e(t('Etappe')) + ' ' + n + '</span><h1>' + e(van.naam) + ' → ' + e(naar.naam) + '</h1><div class="etappe-feiten">' +
       '<div>' + telB(et.km, et.km % 1 ? 1 : 0, '', ' km') + '<span>' + e(t('afstand')) + '</span></div><div><b>' + e(t(et.uren)) + '</b><span>' + e(t('looptijd')) + '</span></div>' +
       '<div><b>' + e(t(ZWAARTE[et.zwaarte])) + '</b><span>' + e(t('zwaarte')) + '</span></div>' + (hoogteVan(et) ? '<div>' + telB(hoogteVan(et).stijging, 0, '↗ ', ' m') + '<span>' + e(t('stijging')) + '</span></div>' : '<div><b>' + stranden.length + '</b><span>' + e(t('stranden')) + '</span></div>') + '</div></div>' +
-      (f && f.maker ? '<a class="fotovermelding" href="#fotos">' + e(t(f.bijschrift)) + ' · ' + e(t('Foto')) + ': ' + e(f.maker) + '</a>' : '') + '</section>' +
+      '</section>' +
       '<div class="container inhoud-grid"><div>' + (et.intro ? '<p class="etappe-lead">' + e(t(et.intro)) + '</p>' : '') +
       (et.fotos.length >= 3 ? '<div class="etappe-beelden n' + Math.min(3, et.fotos.length - 1) + '">' + et.fotos.slice(1, 4).map(function (x) { return '<button type="button" data-foto="' + e(x.bestand) + '"><img src="' + img(x, true) + '" alt="' + e(t(x.bijschrift)) + '" loading="lazy"></button>'; }).join('') + '</div>' : '') +
       profielSvg(et) + '<div data-slot="etappe-extra"></div>' +
@@ -2698,7 +2697,7 @@ const DATA = {"inst": {"site_naam": "Sardine Trails", "beheerder_naam": "Rota Vi
   }
   function fotos() {
     return '<section class="paginakop"><div class="container"><h1>' + e(t("Foto's")) + '</h1><p class="intro">' + e(t("Met dank aan de fotografen. Alle foto's staan onder een vrije licentie op Wikimedia Commons.")) + '</p></div></section>' +
-      '<section class="sectie" style="padding-top:32px"><div class="container fotokaarten fotokaarten-raster">' + D.fotos.map(function (f) {
+      '<section class="sectie" style="padding-top:32px"><div class="container fotokaarten fotokaarten-raster">' + D.fotos.filter(function (f) { return f.maker; }).map(function (f) {
         return '<a class="fotokaart" style="aspect-ratio:4/3" href="' + e(f.bron) + '" target="_blank" rel="noopener"><img src="' + img(f, true) + '" alt="' + e(t(f.bijschrift)) + '" loading="lazy">' +
           '<div class="tekst"><h3>' + e(t(f.bijschrift)) + '</h3><span class="meta">' + e(t('Foto')) + ': ' + e(f.maker) + ' · ' + e(f.licentie) + '</span></div></a>';
       }).join('') + '</div></section>';
